@@ -12,24 +12,24 @@ import collection.JavaConverters._
 
 trait Decoder[A] {
   self =>
-  def apply(c: AttributeValue): A
+  def decode(c: AttributeValue): A
 
-  def apply(name: String, items: Map[String, AttributeValue]): A = {
+  def decode(name: String, items: Map[String, AttributeValue]): A = {
     val vOpt = items.get(name)
     vOpt.fold(
       throw new Exception(s"Attribute '$name' not found in '$items'")
     )(
-      v => apply(v)
+      v => decode(v)
     )
   }
 
   def map[B](f: A => B): Decoder[B] = new Decoder[B] {
-    def apply(c: AttributeValue): B = f(self(c))
+    def decode(c: AttributeValue): B = f(self.decode(c))
   }
 
   def flatMap[B](f: A => Decoder[B]): Decoder[B] = new Decoder[B] {
-    def apply(c: AttributeValue): B = {
-      f(self(c))(c)
+    def decode(c: AttributeValue): B = {
+      f(self.decode(c)).decode(c)
     }
   }
 }
@@ -39,7 +39,7 @@ object Decoder {
 
   // `instance` is more idomatic here, but `createDecoder` is more readable for those not familiar with the type class pattern
   def createDecoder[A](f: AttributeValue => A): Decoder[A] = new Decoder[A] {
-    def apply(c: AttributeValue): A = f(c)
+    def decode(c: AttributeValue): A = f(c)
   }
 
   implicit val decodeAttributeValue: Decoder[AttributeValue] = createDecoder(identity)
@@ -60,16 +60,16 @@ object Decoder {
                                            d: Decoder[A],
                                            cbf: CanBuildFrom[Nothing, A, C[A]]
                                           ): Decoder[C[A]] = createDecoder { c =>
-    val list = c.getL.asScala.map(d(_))
+    val list = c.getL.asScala.map(d.decode(_))
     val builder = cbf()
     builder ++= list
     builder.result()
   }
 
   implicit def decodeOption[A](implicit d: Decoder[A]): Decoder[Option[A]] = new Decoder[Option[A]] {
-    override def apply(c: AttributeValue): Option[A] = Try(d(c)).toOption
-    override def apply(name: String, items: Map[String, AttributeValue]): Option[A] = {
-      items.get(name).flatMap(apply)
+    override def decode(c: AttributeValue): Option[A] = Try(d.decode(c)).toOption
+    override def decode(name: String, items: Map[String, AttributeValue]): Option[A] = {
+      items.get(name).flatMap(decode)
     }
   }
 
@@ -80,7 +80,7 @@ object Decoder {
                                                    d: Decoder[V],
                                                    cbf: CanBuildFrom[Nothing, (String, V), M[String, V]]
                                                   ): Decoder[M[String, V]] = createDecoder { c =>
-    val map = c.getM.asScala.mapValues(d(_))
+    val map = c.getM.asScala.mapValues(d.decode(_))
     val builder = cbf()
     builder ++= map
     builder.result()

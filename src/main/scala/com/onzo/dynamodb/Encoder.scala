@@ -8,13 +8,13 @@ import collection.JavaConverters._
 
 trait Encoder[A] {
   //self =>
-  def apply(a: A): AttributeValue
+  def encode(a: A): AttributeValue
 
-  def apply(name: String, a: A): Map[String, AttributeValue] = {
-    Map(name -> apply(a))
+  def encode(name: String, a: A): Map[String, AttributeValue] = {
+    Map(name -> encode(a))
   }
 
-  def contramap[B](f: B => A): Encoder[B] = Encoder.createEncoder(b => apply(f(b)))
+  def contramap[B](f: B => A): Encoder[B] = Encoder.createEncoder(b => encode(f(b)))
 }
 
 object Encoder {
@@ -22,7 +22,7 @@ object Encoder {
 
   // `instance` is more idomatic here, but `createEncoder` is more readable for those not familiar with the type class pattern
   def createEncoder[A](f: A => AttributeValue): Encoder[A] = new Encoder[A] {
-    def apply(a: A): AttributeValue = f(a)
+    def encode(a: A): AttributeValue = f(a)
   }
 
   implicit def encodeTraversableOnce[A0, C[_]](implicit
@@ -33,7 +33,7 @@ object Encoder {
       val items = new java.util.ArrayList[AttributeValue]()
 
       is.conversion(list).foreach { a =>
-        items add e(a)
+        items add e.encode(a)
       }
 
       new AttributeValue().withL(items)
@@ -55,19 +55,19 @@ object Encoder {
 
   implicit def encodeOption[A](implicit e: Encoder[A]): Encoder[Option[A]] = new Encoder[Option[A]] {
     // `get` is an unsafe operation; it may throw at runtime.  Here we use `withNULL` to represent the absence of a value instead.
-    override def apply(a: Option[A]): AttributeValue =
-      a.map(e(_))
+    override def encode(a: Option[A]): AttributeValue =
+      a.map(e.encode(_))
        .getOrElse(new AttributeValue().withNULL(true))
 
-    override def apply(name: String, a: Option[A]): Map[String, AttributeValue] =
-      a.fold(Map.empty[String, AttributeValue])(x => Map(name -> e(x)))
+    override def encode(name: String, a: Option[A]): Map[String, AttributeValue] =
+      a.fold(Map.empty[String, AttributeValue])(x => Map(name -> e.encode(x)))
   }
 
 
   implicit def encodeMapLike[M[K, +V] <: Map[K, V], V](implicit
                                                        e: Encoder[V]
                                                       ): Encoder[M[String, V]] = Encoder.createEncoder { m =>
-    new AttributeValue().withM(m.mapValues(e(_)).asJava)
+    new AttributeValue().withM(m.mapValues(e.encode(_)).asJava)
   }
 
   def encodeEither[A, B](leftKey: String, rightKey: String)(implicit
@@ -76,8 +76,8 @@ object Encoder {
   ): Encoder[Either[A, B]] = createEncoder { a =>
     val map = new java.util.HashMap[String, AttributeValue]()
     a.fold(
-      a => map.put(leftKey, ea(a)),
-      b => map.put(rightKey, eb(b)))
+      a => map.put(leftKey, ea.encode(a)),
+      b => map.put(rightKey, eb.encode(b)))
     new AttributeValue().withM(map)
   }
 

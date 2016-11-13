@@ -15,9 +15,9 @@ trait NamedKeyLike[A] extends KeyLike[A] {
 
   val decoder: Decoder[A]
 
-  def encode(t: A): Map[String, AttributeValue] = encoder.apply(name, t)
+  def encode(t: A): Map[String, AttributeValue] = encoder.encode(name, t)
 
-  def decode(items: Map[String, AttributeValue]): A = decoder(name, items)
+  def decode(items: Map[String, AttributeValue]): A = decoder.decode(name, items)
 }
 
 case class PrimaryKey[A](name: String)(implicit val encoder: Encoder[A], val decoder: Decoder[A])
@@ -41,7 +41,7 @@ case class MapKey[A](implicit val encoder: Encoder[A], val decoder: Decoder[A])
   def encode(t: Map[String, A]): Map[String, AttributeValue] = {
     val mapB = Map.newBuilder[String, AttributeValue]
     t.foreach {
-      case (key, v) => mapB ++= encoder(key, v)
+      case (key, v) => mapB ++= encoder.encode(key, v)
     }
     mapB.result()
   }
@@ -49,7 +49,7 @@ case class MapKey[A](implicit val encoder: Encoder[A], val decoder: Decoder[A])
   def decode(items: Map[String, AttributeValue]): Map[String, A] = {
     val mapB = Map.newBuilder[String, A]
     items.foreach {
-      case (key, v) => mapB += key -> decoder(key, items)
+      case (key, v) => mapB += key -> decoder.decode(key, items)
     }
     mapB.result()
   }

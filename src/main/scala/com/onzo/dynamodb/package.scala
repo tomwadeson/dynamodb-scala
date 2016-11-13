@@ -43,7 +43,7 @@ package object dynamodb {
               val zipped = a.zip(entityGen.to(b))(zipper)
 
               val v = zipped.collectFirst(HlistHelper.findPrimaryKeyValue)(collectFirst2)
-              _primaryKey.encoder.apply(v)
+              _primaryKey.encoder.encode(v)
           })
         }
 
@@ -55,7 +55,7 @@ package object dynamodb {
 
                 // at this point we know there is a RangeKey and we know that entityGen exist
                 zipped.runtimeList.collectFirst({
-                  case (r: RangeKey[A], a: A) => r.encoder.apply(a)
+                  case (r: RangeKey[A], a: A) => r.encoder.encode(a)
                 }).get
             }
           }

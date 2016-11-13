@@ -17,7 +17,7 @@ abstract class Table[T](override val tableName: String) extends DynamoDBSerializ
   }
 
   private def encodeKey(obj: T, key: Option[(String, Encoder[T])]): Option[(String, AttributeValue)] = key.map {
-    case (k, encoder) => k -> encoder(obj)
+    case (k, encoder) => k -> encoder.encode(obj)
   }
 
   override def fromAttributeMap(item: mutable.Map[String, AttributeValue]): T = *.decode(item.toMap)
