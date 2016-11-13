@@ -83,6 +83,8 @@ trait DynamoDBClient
 
     val deadline = 10.minutes.fromNow
 
+    // We don't need to implement this retry logic ourselves; ScalaTest provides support for this.
+    // See: http://doc.scalatest.org/3.0.0/index.html#org.scalatest.concurrent.Eventually
     while (deadline.hasTimeLeft) {
       try {
         val result = await {
