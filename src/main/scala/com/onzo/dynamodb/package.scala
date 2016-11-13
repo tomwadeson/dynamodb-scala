@@ -38,7 +38,7 @@ package object dynamodb {
 
       new TableMapper[B] {
         override val primaryKey: Option[(String, Encoder[B])] = {
-          Some(_primaryKey.name -> Encoder.instance {
+          Some(_primaryKey.name -> Encoder.createEncoder {
             b: B =>
               val zipped = a.zip(entityGen.to(b))(zipper)
 
@@ -49,7 +49,7 @@ package object dynamodb {
 
         override def rangeKey: Option[(String, Encoder[B])] = {
           _rangeKey.map { key =>
-            key.name -> Encoder.instance {
+            key.name -> Encoder.createEncoder {
               b: B =>
                 val zipped = a.zip(entityGen.to(b))(zipper)
 
