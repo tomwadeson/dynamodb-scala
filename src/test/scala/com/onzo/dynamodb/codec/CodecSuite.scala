@@ -29,7 +29,7 @@ with ArbitraryInstances with EqInstances {
 class AnyValCodecSuite extends DynamoDBSuite {
   //checkAll("Codec[Unit]", CodecTests[Unit].codec)
   checkAll("Codec[Boolean]", CodecTests[Boolean].codec)
-  //checkAll("Codec[Char]", CodecTests[Char].codec)
+  checkAll("Codec[Char]", CodecTests[Char].codec)
   checkAll("Codec[Float]", CodecTests[Float].codec)
   checkAll("Codec[Double]", CodecTests[Double].codec)
   checkAll("Codec[Byte]", CodecTests[Byte].codec)

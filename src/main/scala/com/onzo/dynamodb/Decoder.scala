@@ -42,6 +42,7 @@ object Decoder {
   }
 
   implicit val decodeAttributeValue: Decoder[AttributeValue] = createDecoder(identity)
+  implicit val decodeChar: Decoder[Char] = createDecoder(_.getS.charAt(0))
   implicit val decodeString: Decoder[String] = createDecoder(_.getS)
   implicit val decodeBoolean: Decoder[Boolean] = createDecoder(_.getBOOL)
   implicit val decodeFloat: Decoder[Float] = createDecoder(_.getN.toFloat)

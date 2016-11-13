@@ -39,6 +39,7 @@ object Encoder {
     }
 
   implicit val encodeAttributeValue: Encoder[AttributeValue] = createEncoder(identity)
+  implicit val encodeChar: Encoder[Char] = createEncoder(char => new AttributeValue().withS(char.toString))
   implicit val encodeString: Encoder[String] = createEncoder(new AttributeValue().withS(_))
   implicit val encodeBoolean: Encoder[Boolean] = createEncoder(new AttributeValue().withBOOL(_))
   implicit val encodeFloat: Encoder[Float] = createEncoder(a => new AttributeValue().withN(a.toString))
