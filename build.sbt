@@ -6,6 +6,7 @@ scalaVersion := "2.11.7"
 
 organization := "com.onzo"
 
+// These flags haven't been wired in: scalacOptions ++= compilerOptions
 lazy val compilerOptions = Seq(
   "-deprecation",
   "-encoding", "UTF-8",
