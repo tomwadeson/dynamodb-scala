@@ -8,6 +8,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue
 
 import scala.collection.generic.CanBuildFrom
 import scala.util.Try
+import collection.JavaConverters._
 
 trait Decoder[A] {
   self =>
@@ -59,15 +60,9 @@ object Decoder {
                                            d: Decoder[A],
                                            cbf: CanBuildFrom[Nothing, A, C[A]]
                                           ): Decoder[C[A]] = createDecoder { c =>
-    import scala.collection.JavaConversions._
-
-    val list = c.getL
+    val list = c.getL.asScala.map(d(_))
     val builder = cbf()
-    for {
-      e <- list
-    } yield {
-      builder += d(e)
-    }
+    builder ++= list
     builder.result()
   }
 
@@ -85,14 +80,9 @@ object Decoder {
                                                    d: Decoder[V],
                                                    cbf: CanBuildFrom[Nothing, (String, V), M[String, V]]
                                                   ): Decoder[M[String, V]] = createDecoder { c =>
-    import scala.collection.JavaConversions._
-    val map = c.getM
+    val map = c.getM.asScala.mapValues(d(_))
     val builder = cbf()
-    for {
-      (k, v) <- map
-    } yield {
-      builder += k -> d(v)
-    }
+    builder ++= map
     builder.result()
   }
 

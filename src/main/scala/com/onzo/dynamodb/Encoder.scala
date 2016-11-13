@@ -4,6 +4,7 @@ import java.util.UUID
 import cats.functor.Contravariant
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import scala.collection.generic.IsTraversableOnce
+import collection.JavaConverters._
 
 trait Encoder[A] {
   //self =>
@@ -68,12 +69,7 @@ object Encoder {
   implicit def encodeMapLike[M[K, +V] <: Map[K, V], V](implicit
                                                        e: Encoder[V]
                                                       ): Encoder[M[String, V]] = Encoder.createEncoder { m =>
-    val map = m.map {
-      case (k, v) => (k, e(v))
-    }
-    import scala.collection.JavaConversions._
-
-    new AttributeValue().withM(map)
+    new AttributeValue().withM(m.mapValues(e(_)).asJava)
   }
 
   def encodeEither[A, B](leftKey: String, rightKey: String)(implicit
