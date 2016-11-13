@@ -54,15 +54,13 @@ object Encoder {
   implicit val encodeUUID: Encoder[UUID] = createEncoder(uuid => new AttributeValue().withS(uuid.toString))
 
   implicit def encodeOption[A](implicit e: Encoder[A]): Encoder[Option[A]] = new Encoder[Option[A]] {
-    //self =>
-    override def apply(a: Option[A]): AttributeValue = e(a.get)
+    // `get` is an unsafe operation; it may throw at runtime.  Here we use `withNULL` to represent the absence of a value instead.
+    override def apply(a: Option[A]): AttributeValue =
+      a.map(e(_))
+       .getOrElse(new AttributeValue().withNULL(true))
 
-    override def apply(name: String, a: Option[A]): Map[String, AttributeValue] = {
-      if(a.isDefined)
-        Map(name -> apply(a))
-      else
-        Map.empty[String,AttributeValue]
-    }
+    override def apply(name: String, a: Option[A]): Map[String, AttributeValue] =
+      a.fold(Map.empty[String, AttributeValue])(x => Map(name -> e(x)))
   }
 
 
